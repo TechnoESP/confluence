@@ -1,0 +1,19 @@
+# Archivos generados por herramientas de CSS (Autoprefixer, Browserslist, etc.)
+*.css.map
+*.scss.map
+*.sass.map
+*.css
+
+# Archivos temporales de node_modules
+node_modules/
+
+# Archivos de construcción de React
+/build/
+
+# Archivos de caché y logs
+*.log
+*.swp
+.DS_Store
+
+# Archivos de entorno
+.env
