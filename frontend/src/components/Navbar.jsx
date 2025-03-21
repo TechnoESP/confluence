@@ -5,12 +5,20 @@ import "../styles.css";
 const Navbar = ({ isLoggedIn, handleLogout }) => {
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-logo">Empresa</Link>
-      <div>
-        <Link to="/seguroCoche" className="text-white px-4">Seguro Coche</Link>
+      <div className="left-side">
+        <Link to="/" className="navbar-logo">
+          <img src="/confluencegroup.png" alt="Logo" className="logo-image" />
+        </Link>
+        <div className="navbar-links">
+          <div className="separator"></div>
+          <Link to="/seguroCoche" className="seguroCoche-link">Seguro Coche</Link>
+          <div className="separator"></div>
+        </div>
+      </div>
+      <div className="right-side">
         <button
           className={
-            isLoggedIn ? "bg-red-500 text-white px-4 py-2 ml-4" : "bg-blue-500 text-white px-4 py-2 ml-4"
+            isLoggedIn ? "bg-red-500 text-white px-4 py-2" : "bg-blue-500 text-white px-4 py-2"
           }
           onClick={handleLogout}
         >
