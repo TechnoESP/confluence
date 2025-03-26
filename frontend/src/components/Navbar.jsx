@@ -1,12 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles.css";
 
-const Navbar = ({ isLoggedIn, handleLogout }) => {
+const Navbar = () => {
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem("accessToken");
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
   return (
     <nav className="navbar">
       <div className="left-side">
-        <Link to="/" className="navbar-logo">
+        <Link to="/seguroCoche" className="navbar-logo">
           <img src="/confluencegroup.png" alt="Logo" className="logo-image" />
         </Link>
         <div className="navbar-links">
@@ -15,15 +23,17 @@ const Navbar = ({ isLoggedIn, handleLogout }) => {
           <div className="separator"></div>
         </div>
       </div>
+
       <div className="right-side">
-        <button
-          className={
-            isLoggedIn ? "bg-red-500 text-white px-4 py-2" : "bg-blue-500 text-white px-4 py-2"
-          }
-          onClick={handleLogout}
-        >
-          {isLoggedIn ? "Cerrar sesión" : "Iniciar sesión"}
-        </button>
+        {isLoggedIn ? (
+          <button className="logout-button" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+        ) : (
+          <button className="login-button" onClick={() => navigate("/login")}>
+            Iniciar sesión
+          </button>
+        )}
       </div>
     </nav>
   );
