@@ -17,7 +17,7 @@ const SeguroCoche = () => {
       marca: "",
       modelo: "",
       acabado: "",
-      numPuertas: 2, // Cambio de "puertas" a "numPuertas"
+      numPuertas: 2,
       color: "",
       tieneSeguro: "",
       compania: "",
@@ -39,6 +39,9 @@ const SeguroCoche = () => {
     }
   });
 
+  const [mostrarPropietario, setMostrarPropietario] = useState(false);
+  const [mostrarConductor, setMostrarConductor] = useState(false);
+
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
 
@@ -49,12 +52,18 @@ const SeguroCoche = () => {
     setMensaje("");
     setError("");
 
-    if (
-      !validarDNI(formData.tomador.dni) ||
-      !validarDNI(formData.propietario.dni) ||
-      !validarDNI(formData.conductor.dni)
-    ) {
-      setError("DNI incorrecto");
+    if (!validarDNI(formData.tomador.dni)) {
+      setError("DNI del tomador incorrecto");
+      return;
+    }
+
+    if (mostrarPropietario && !validarDNI(formData.propietario.dni)) {
+      setError("DNI del propietario incorrecto");
+      return;
+    }
+
+    if (mostrarConductor && !validarDNI(formData.conductor.dni)) {
+      setError("DNI del conductor incorrecto");
       return;
     }
 
@@ -81,11 +90,25 @@ const SeguroCoche = () => {
     }
   };
 
+  const handleCheckboxChange = (section) => {
+    if (section === "propietario") {
+      setMostrarPropietario(!mostrarPropietario);
+      if (!mostrarPropietario) {
+        setFormData({ ...formData, propietario: { nombre: "", apellidos: "", dni: "", fechaNacimiento: "", fechaCarne: "" } });
+      }
+    }
+    if (section === "conductor") {
+      setMostrarConductor(!mostrarConductor);
+      if (!mostrarConductor) {
+        setFormData({ ...formData, conductor: { nombre: "", apellidos: "", dni: "", fechaNacimiento: "", fechaCarne: "" } });
+      }
+    }
+  };
+
   return (
     <div className="form-container">
       <form onSubmit={handleSubmit}>
-        {/* Sección 1: Tomador */}
-        <h2>Datos del Tomador</h2>
+      <h2>Datos del Tomador</h2>
         <div className="form-group">
           <label>Nombre</label>
           <input
@@ -144,7 +167,12 @@ const SeguroCoche = () => {
             type="text"
             placeholder="Código Postal"
             value={formData.tomador.cp}
-            onChange={(e) => setFormData({ ...formData, tomador: { ...formData.tomador, cp: e.target.value } })}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (/^\d{0,5}$/.test(value)) {
+                setFormData({ ...formData, tomador: { ...formData.tomador, cp: value } });
+              }
+            }}
           />
         </div>
         <div className="form-group">
@@ -259,8 +287,22 @@ const SeguroCoche = () => {
           </>
         )}
 
-        {/* Sección 2: Propietario */}
-        <h2>Datos del Propietario</h2>
+        {/* Checkbox para mostrar propietario */}
+        <div className="form-group">
+          <label>
+            <input
+              type="checkbox"
+              checked={mostrarPropietario}
+              onChange={() => handleCheckboxChange("propietario")}
+            />
+            El propietario es diferente al tomador
+          </label>
+        </div>
+
+        {/* Sección de propietario condicional */}
+        {mostrarPropietario && (
+          <div>
+            <h2>Datos del Propietario</h2>
         <div className="form-group">
           <label>Nombre</label>
           <input
@@ -270,88 +312,107 @@ const SeguroCoche = () => {
             onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, nombre: e.target.value } })}
           />
         </div>
+          <div className="form-group">
+            <label>Apellidos</label>
+            <input
+              type="text"
+              placeholder="Apellidos"
+              value={formData.propietario.apellidos}
+              onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, apellidos: e.target.value } })}
+            />
+          </div>
+          <div className="form-group">
+            <label>DNI</label>
+            <input
+              type="text"
+              placeholder="DNI"
+              value={formData.propietario.dni}
+              onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, dni: e.target.value } })}
+            />
+          </div>
+          <div className="form-group">
+            <label>Fecha Nacimiento</label>
+            <input
+              type="date"
+              value={formData.propietario.fechaNacimiento}
+              onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, fechaNacimiento: e.target.value } })}
+            />
+          </div>
+          <div className="form-group">
+            <label>Fecha Carnet</label>
+            <input
+              type="date"
+              value={formData.propietario.fechaCarne}
+              onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, fechaCarne: e.target.value } })}
+            />
+          </div>
+          </div>
+        )}
+
+        {/* Checkbox para mostrar conductor */}
         <div className="form-group">
-          <label>Apellidos</label>
-          <input
-            type="text"
-            placeholder="Apellidos"
-            value={formData.propietario.apellidos}
-            onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, apellidos: e.target.value } })}
-          />
-        </div>
-        <div className="form-group">
-          <label>DNI</label>
-          <input
-            type="text"
-            placeholder="DNI"
-            value={formData.propietario.dni}
-            onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, dni: e.target.value } })}
-          />
-        </div>
-        <div className="form-group">
-          <label>Fecha Nacimiento</label>
-          <input
-            type="date"
-            value={formData.propietario.fechaNacimiento}
-            onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, fechaNacimiento: e.target.value } })}
-          />
-        </div>
-        <div className="form-group">
-          <label>Fecha Carnet</label>
-          <input
-            type="date"
-            value={formData.propietario.fechaCarne}
-            onChange={(e) => setFormData({ ...formData, propietario: { ...formData.propietario, fechaCarne: e.target.value } })}
-          />
+          <label>
+            <input
+              type="checkbox"
+              checked={mostrarConductor}
+              onChange={() => handleCheckboxChange("conductor")}
+            />
+            Añadir conductor ocasional
+          </label>
         </div>
 
-        {/* Sección 3: Conductor */}
-        <h2>Datos del Conductor</h2>
-        <div className="form-group">
-          <label>Nombre</label>
-          <input
-            type="text"
-            placeholder="Nombre"
-            value={formData.conductor.nombre}
-            onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, nombre: e.target.value } })}
-          />
-        </div>
-        <div className="form-group">
-          <label>Apellidos</label>
-          <input
-            type="text"
-            placeholder="Apellidos"
-            value={formData.conductor.apellidos}
-            onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, apellidos: e.target.value } })}
-          />
-        </div>
-        <div className="form-group">
-          <label>DNI</label>
-          <input
-            type="text"
-            placeholder="DNI"
-            value={formData.conductor.dni}
-            onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, dni: e.target.value } })}
-          />
-        </div>
-        <div className="form-group">
-          <label>Fecha Nacimiento</label>
-          <input
-            type="date"
-            value={formData.conductor.fechaNacimiento}
-            onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, fechaNacimiento: e.target.value } })}
-          />
-        </div>
-        <div className="form-group">
-          <label>Fecha Carnet</label>
-          <input
-            type="date"
-            value={formData.conductor.fechaCarne}
-            onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, fechaCarne: e.target.value } })}
-          />
-        </div>
+        {/* Sección de conductor condicional */}
+        {mostrarConductor && (
+          <div>
+          <h2>Datos del Conductor</h2>
+                  <div className="form-group">
+                    <label>Nombre</label>
+                    <input
+                      type="text"
+                      placeholder="Nombre"
+                      value={formData.conductor.nombre}
+                      onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, nombre: e.target.value } })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Apellidos</label>
+                    <input
+                      type="text"
+                      placeholder="Apellidos"
+                      value={formData.conductor.apellidos}
+                      onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, apellidos: e.target.value } })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>DNI</label>
+                    <input
+                      type="text"
+                      placeholder="DNI"
+                      value={formData.conductor.dni}
+                      onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, dni: e.target.value } })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Fecha Nacimiento</label>
+                    <input
+                      type="date"
+                      value={formData.conductor.fechaNacimiento}
+                      onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, fechaNacimiento: e.target.value } })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Fecha Carnet</label>
+                    <input
+                      type="date"
+                      value={formData.conductor.fechaCarne}
+                      onChange={(e) => setFormData({ ...formData, conductor: { ...formData.conductor, fechaCarne: e.target.value } })}
+                    />
+                  </div>
+          </div>
+        )}
 
         <button type="submit" className="submit-button">Enviar</button>
+
         {mensaje && <p className="success-message">{mensaje}</p>}
         {error && <p className="error-message">{error}</p>}
       </form>
