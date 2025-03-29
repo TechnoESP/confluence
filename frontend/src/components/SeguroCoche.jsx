@@ -3,10 +3,12 @@ import "../styles.css";
 
 const SeguroCoche = () => {
   const [formData, setFormData] = useState({
+    codigoAgente: "", // Nuevo campo independiente
     tomador: {
       nombre: "",
       apellidos: "",
-      dni: "",
+      tipoDocumento: "DNI", // Nuevo: Puede ser "DNI", "NIE" o "CIF"
+      documento: "", // Reemplaza "dni" para admitir diferentes tipos de documento
       fechaNacimiento: "",
       fechaCarne: "",
       direccion: "",
@@ -21,23 +23,28 @@ const SeguroCoche = () => {
       color: "",
       tieneSeguro: "",
       compania: "",
-      numPoliza: ""
+      numPoliza: "",
+      esPropietario: false, // Checkbox: ¿Tomador es propietario?
+      esConductor: false // Checkbox: ¿Tomador es conductor?
     },
     propietario: {
       nombre: "",
       apellidos: "",
-      dni: "",
+      tipoDocumento: "DNI",
+      documento: "",
       fechaNacimiento: "",
       fechaCarne: ""
     },
     conductor: {
       nombre: "",
       apellidos: "",
-      dni: "",
+      tipoDocumento: "DNI",
+      documento: "",
       fechaNacimiento: "",
       fechaCarne: ""
     }
   });
+  
 
   const [mostrarPropietario, setMostrarPropietario] = useState(false);
   const [mostrarConductor, setMostrarConductor] = useState(false);
@@ -46,40 +53,120 @@ const SeguroCoche = () => {
   const [error, setError] = useState("");
 
   const validarDNI = (dni) => /^[0-9]{8}[A-Z]$/.test(dni);
+  const validarNIE = (nie) => /^[XYZ][0-9]{7}[A-Z]$/.test(nie);
+  const validarCIF = (cif) => /^[A-Z][0-9]{7}[A-Z0-9]$/.test(cif);
 
+  const validarCamposObligatorios = () => {
+    const { tomador, propietario, conductor } = formData;
+  
+    // Validar campos obligatorios del tomador
+    const camposTomadorObligatorios = [
+      "nombre",
+      "apellidos",
+      "tipoDocumento",
+      "documento",
+      "fechaNacimiento",
+      "fechaCarne",
+      "direccion",
+      "cp",
+      "localidad",
+      "provincia",
+      "matricula",
+      "marca",
+      "modelo",
+      "acabado",
+      "numPuertas",
+      "color"
+    ];
+  
+    for (const campo of camposTomadorObligatorios) {
+      if (!tomador[campo]) return `El campo ${campo} del tomador es obligatorio.`;
+    }
+  
+    // Validar documento según el tipo (DNI, NIE o CIF)
+    if (
+      (tomador.tipoDocumento === "DNI" && !validarDNI(tomador.documento)) ||
+      (tomador.tipoDocumento === "NIE" && !validarNIE(tomador.documento)) ||
+      (tomador.tipoDocumento === "CIF" && !validarCIF(tomador.documento))
+    ) {
+      return "Documento del tomador no es válido.";
+    }
+  
+    // Validar compañía y nº de póliza si tiene seguro
+    if (tomador.tieneSeguro === "si" && (!tomador.compania || !tomador.numPoliza)) {
+      return "Si tiene seguro, debe indicar la compañía y el nº de póliza.";
+    }
+  
+    // Validar campos del propietario si está activado
+    if (mostrarPropietario) {
+      const camposPropietarioObligatorios = [
+        "nombre",
+        "apellidos",
+        "tipoDocumento",
+        "documento",
+        "fechaNacimiento",
+        "fechaCarne"
+      ];
+  
+      for (const campo of camposPropietarioObligatorios) {
+        if (!propietario[campo]) return `El campo ${campo} del propietario es obligatorio.`;
+      }
+  
+      if (
+        (propietario.tipoDocumento === "DNI" && !validarDNI(propietario.documento)) ||
+        (propietario.tipoDocumento === "NIE" && !validarNIE(propietario.documento)) ||
+        (propietario.tipoDocumento === "CIF" && !validarCIF(propietario.documento))
+      ) {
+        return "Documento del propietario no es válido.";
+      }
+    }
+  
+    // Validar campos del conductor si está activado
+    if (mostrarConductor) {
+      const camposConductorObligatorios = [
+        "nombre",
+        "apellidos",
+        "tipoDocumento",
+        "documento",
+        "fechaNacimiento",
+        "fechaCarne"
+      ];
+  
+      for (const campo of camposConductorObligatorios) {
+        if (!conductor[campo]) return `El campo ${campo} del conductor es obligatorio.`;
+      }
+  
+      if (
+        (conductor.tipoDocumento === "DNI" && !validarDNI(conductor.documento)) ||
+        (conductor.tipoDocumento === "NIE" && !validarNIE(conductor.documento)) ||
+        (conductor.tipoDocumento === "CIF" && !validarCIF(conductor.documento))
+      ) {
+        return "Documento del conductor no es válido.";
+      }
+    }
+  
+    return null; // Todo es válido
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");
     setError("");
-
-    if (!validarDNI(formData.tomador.dni)) {
-      setError("DNI del tomador incorrecto");
+  
+    // Validar campos obligatorios
+    const mensajeError = validarCamposObligatorios();
+    if (mensajeError) {
+      setError(mensajeError);
       return;
     }
-
-    if (mostrarPropietario && !validarDNI(formData.propietario.dni)) {
-      setError("DNI del propietario incorrecto");
-      return;
-    }
-
-    if (mostrarConductor && !validarDNI(formData.conductor.dni)) {
-      setError("DNI del conductor incorrecto");
-      return;
-    }
-
-    if (formData.tomador.tieneSeguro === "si") {
-      if (!formData.tomador.compania || !formData.tomador.numPoliza) {
-        setError("Compañía y Nº Póliza son obligatorios cuando tiene seguro.");
-        return;
-      }
-    }
-
+  
     try {
       const response = await fetch("http://localhost:5000/seguroCoche", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
+  
       if (response.ok) {
         setMensaje("Enviado correctamente");
       } else {
@@ -89,6 +176,7 @@ const SeguroCoche = () => {
       setError("Error de conexión");
     }
   };
+  
 
   const handleCheckboxChange = (section) => {
     if (section === "propietario") {
@@ -128,14 +216,40 @@ const SeguroCoche = () => {
           />
         </div>
         <div className="form-group">
-          <label>DNI</label>
-          <input
-            type="text"
-            placeholder="DNI"
-            value={formData.tomador.dni}
-            onChange={(e) => setFormData({ ...formData, tomador: { ...formData.tomador, dni: e.target.value } })}
-          />
+          <label>Tipo de documento</label>
+          <select
+            value={formData.tomador.tipoDocumento}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                tomador: { ...formData.tomador, tipoDocumento: e.target.value, dni: "" },
+              })
+            }
+          >
+            <option value="">Seleccione</option>
+            <option value="DNI">DNI</option>
+            <option value="NIE">NIE</option>
+            <option value="CIF">CIF</option>
+          </select>
         </div>
+
+        {formData.tomador.tipoDocumento && (
+          <div className="form-group">
+            <label>{formData.tomador.tipoDocumento}</label>
+            <input
+              type="text"
+              placeholder={formData.tomador.tipoDocumento}
+              value={formData.tomador.documento}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  tomador: { ...formData.tomador, documento: e.target.value },
+                })
+              }
+            />
+          </div>
+        )}
+
         <div className="form-group">
           <label>Fecha Nacimiento</label>
           <input
